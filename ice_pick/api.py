@@ -208,18 +208,24 @@ class APIRequest(object):
         ''' Returns a copy of the current API filters.'''
         return self._filters.copy()
 
-    def get_data(self):
-        '''Fetches data from Ice and returns it as a dictonary'''
+    def get_data(self, timeout=None):
+        '''
+        Fetches data from Ice and returns it as a dictonary
+        :param timeout: (optional) Float describing the timeout of the
+            request.
+        :type timeout: float
+        '''
         request_url = _urlparse.urljoin(self.ice_url, 'dashboard/getData')
         data_filters = _json.dumps(self._filters)
         headers = {
             'content-type': 'application/json;charset=utf-8'
         }
-        r = _requests.post(request_url, data=data_filters, headers=headers, auth=self.auth)
-        status_code = r.status_code
-        if status_code == 200:
-            response = r.content
-            data = _json.loads(response)
-            return data
-        raise _exceptions.APIRequestException('POST', request_url,
-                                              status_code)
+        try:
+            r = _requests.post(request_url, data=data_filters, headers=headers, auth=self.auth, timeout=timeout)
+            status_code = r.status_code if not r.raise_for_status() else r.raise_for_status()
+            if status_code == 200:
+                response = r.content
+                data = _json.loads(response)
+                return data
+        except Exception as e:
+            raise _exceptions.APIRequestException('POST', request_url, e)

@@ -86,6 +86,14 @@ By default **ice-pick** uses the following filters:
     
 The *start* and *end* dates are based on current (UTC) time by default.
 
+### Request Timeout
+
+    from ice_pick.api import APIRequest
+
+    ice_url = 'http://example.com/ice/'  # URL to your Ice instance
+    api_request = APIRequest(ice_url)
+    data = api_request.get_data(timeout=10.0) # (optional) Float describing the timeout of the request
+
 ### Filtering by Products
 
     from ice_pick.filters import products as _products

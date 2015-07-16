@@ -75,11 +75,14 @@ class Groups(object):
         """
         self.auth = auth
 
-    def _ice_get(self, path):
+    def _ice_get(self, path, timeout=None):
         """
         Perform a GET request against Ice, for the given path/URL.
         Return the decoded data.
 
+        :param timeout: (optional) Float describing the timeout of the
+            request.
+        :type timeout: float
         :param path: the path (relative to ice_url) to GET
         :type path: string
         :returns: decoded JSON data dict
@@ -87,22 +90,27 @@ class Groups(object):
         :raises: exceptions.APIRequestException
         """
         url = _urlparse.urljoin(self.ice_url + 'dashboard/', path)
-        logger.debug("GETing {u}".format(u=url))
-        res = _requests.get(url, auth=self.auth)
-        if res.status_code != 200:
-            raise APIRequestException('GET', url, res.status_code)
-        resp = res.json()
-        if resp['status'] != 200:
-            raise APIRequestException('GET', url, resp['status'])
-        if 'data' in resp:
-            return resp['data']
-        return {}
+        try:
+            logger.debug("GETing {u}".format(u=url))
+            res = _requests.get(url, auth=self.auth, timeout=timeout)
+            status_code = res.status_code if not res.raise_for_status() else res.raise_for_status()
+            if status_code == 200:
+                resp = res.json()
+                if resp['status'] != 200:
+                    raise Exception("{} {}".format("status", resp['status']))
+                return resp['data'] if 'data' in resp else {}
 
-    def _ice_post(self, path, params):
+        except Exception as e:
+            raise APIRequestException('GET', url, e)
+
+    def _ice_post(self, path, params, timeout=None):
         """
         Perform a POST request against Ice, for the given path/URL, with the given params.
         Return the decoded data.
 
+        :param timeout: (optional) Float describing the timeout of the
+            request.
+        :type timeout: float
         :param path: the path (relative to ice_url) to POST to
         :type path: string
         :param params: dict of POST data
@@ -116,15 +124,16 @@ class Groups(object):
             logger.warning("DRY RUN: Would POST to {u}: {p}".format(u=url, p=params))
             return
         logger.debug("POSTing to {u}: {p}".format(u=url, p=params))
-        res = _requests.post(url, data=json.dumps(params), auth=self.auth)
-        if res.status_code != 200:
-            raise APIRequestException('POST', url, res.status_code)
-        resp = res.json()
-        if resp['status'] != 200:
-            raise APIRequestException('POST', url, resp['status'])
-        if 'data' in resp:
-            return resp['data']
-        return {}
+        try:
+            res = _requests.post(url, data=json.dumps(params), auth=self.auth, timeout=timeout)
+            status_code = res.status_code if not res.raise_for_status() else res.raise_for_status()
+            if status_code == 200:
+                resp = res.json()
+                if resp['status'] != 200:
+                    raise Exception("{} {}".format("status", resp['status']))
+                return resp['data'] if 'data' in resp else {}
+        except Exception as e:
+            raise APIRequestException('POST', url, e)
 
     def get_account_names(self):
         """
