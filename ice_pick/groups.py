@@ -94,11 +94,14 @@ class Groups(object):
             logger.debug("GETing {u}".format(u=url))
             res = _requests.get(url, auth=self.auth, timeout=timeout)
             status_code = res.status_code if not res.raise_for_status() else res.raise_for_status()
+
             if status_code == 200:
                 resp = res.json()
                 if resp['status'] != 200:
                     raise Exception("{} {}".format("status", resp['status']))
                 return resp['data'] if 'data' in resp else {}
+            else:
+                raise Exception("{} {}".format("status", status_code))
 
         except Exception as e:
             raise APIRequestException('GET', url, e)
@@ -127,11 +130,15 @@ class Groups(object):
         try:
             res = _requests.post(url, data=json.dumps(params), auth=self.auth, timeout=timeout)
             status_code = res.status_code if not res.raise_for_status() else res.raise_for_status()
+
             if status_code == 200:
                 resp = res.json()
                 if resp['status'] != 200:
                     raise Exception("{} {}".format("status", resp['status']))
                 return resp['data'] if 'data' in resp else {}
+            else:
+                raise Exception("{} {}".format("status", status_code))
+
         except Exception as e:
             raise APIRequestException('POST', url, e)
 

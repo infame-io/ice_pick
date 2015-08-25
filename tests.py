@@ -243,6 +243,16 @@ class TestAPIRequest(unittest.TestCase):
             valid_response = Mock()
             valid_response.raise_for_status.return_value = None
             valid_response.content = _data
+            valid_response.status_code = 201
+
+            # Testing that if the post request status_code is not 200, the function
+            # get_data will raise an APIRequestException.
+            mock_request.post.return_value = valid_response
+            self.assertRaises(APIRequestException, self.api_request.get_data)
+
+            valid_response = Mock()
+            valid_response.raise_for_status.return_value = None
+            valid_response.content = _data
             valid_response.status_code = 200
 
             # Testing that if the post request status_code is 200, the function

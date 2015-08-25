@@ -223,9 +223,13 @@ class APIRequest(object):
         try:
             r = _requests.post(request_url, data=data_filters, headers=headers, auth=self.auth, timeout=timeout)
             status_code = r.status_code if not r.raise_for_status() else r.raise_for_status()
+
             if status_code == 200:
                 response = r.content
                 data = _json.loads(response)
                 return data
+            else:
+                raise Exception("{} {}".format("status", status_code))
+
         except Exception as e:
             raise _exceptions.APIRequestException('POST', request_url, e)
